@@ -3,6 +3,7 @@ import pygame
 pygame.init()
 pygame.display.set_caption("Physics lab")
 PISTOL = pygame.image.load('img/pistol.png')
+ALTMARK = pygame.image.load("img/Altmark.jpg")
 FPS = 60
 
 
@@ -45,6 +46,7 @@ class LabSetup():
         pygame.draw.rect(self.screen, pygame.Color('black'), self.ticker.rect(), width=3)
         self.screen.blit(PISTOL,
                          (self.ticker.left + self.ticker.width + 200, self.ticker.top + (self.ticker.height / 4)))
+        self.screen.blit(ALTMARK, (self.ticker.left, self.ticker.top))
         self.ticker.move()
 
 
