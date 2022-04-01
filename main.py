@@ -2,7 +2,7 @@ import pygame
 import random
 
 pygame.init()
-pygame.display.set_caption("Physics lab")
+pygame.display.set_caption("Измерение скорости пули с помощью баллистического маятника")
 PISTOL = pygame.image.load('img/pistol.jpg')
 START = pygame.image.load('img/start.png')
 
@@ -11,12 +11,18 @@ ALLUMINIUM_BULLET = pygame.image.load("img/alluminium.png")
 STEEL_BULLET = pygame.image.load("img/steel.png")
 EMPTY_BRASS_BULLET = pygame.image.load("img/empty_brass.png")
 BRASS_BULLET = pygame.image.load("img/brass.png")
+
 INFO = pygame.image.load("img/info.png")
+ICON = pygame.image.load("img/icon.png")
+
 bullet_coords = [(700, 2), (810, 2), (920, 2), (1030, 9), (1140, 2)]
 bullet_weights = [5.2, 6.8, 13.6, 13.8, 19, 9]
 angles = [(195, 220, 1), (235, 250, 1), (325, 350, 1), (325, 350, 1), (375, 400, 1)]
-FPS = 60
 ticker_coords = (350, 300, 250, 100)
+
+FPS = 60
+
+pygame.display.set_icon(ICON)
 
 
 class Lab:
@@ -68,7 +74,7 @@ class Lab:
     def render(self):
         self.screen.fill(pygame.Color("White"))
         # Установка
-        pygame.draw.line(self.screen, pygame.Color('black'), (300, 120), (700, 120), width=5)
+        pygame.draw.line(self.screen, pygame.Color('black'), (250, 120), (700, 120), width=5)
         pygame.draw.line(self.screen, pygame.Color('black'), (550, 120),
                          (self.ticker.left + self.ticker.width - 50, self.ticker.top), width=2)
         pygame.draw.line(self.screen, pygame.Color('black'), (400, 120), (self.ticker.left + 50, self.ticker.top),
@@ -92,7 +98,7 @@ class Lab:
                          (self.pistol.coords[0] + 100, self.pistol.coords[1] + 65),
                          width=2)
         # Угол отклонения
-        font = pygame.font.SysFont("comicsansms", 20)
+        font = pygame.font.SysFont("comicsansms", 30)
         text = font.render(f"α = {str(self.angle)}", True, pygame.Color("Black"))
         self.screen.blit(text, (500, 500))
         # Предупреждение о невыбранной пуле
@@ -102,7 +108,7 @@ class Lab:
             self.screen.blit(text, (1000, 545))
         # Пуля
         if self.started:
-            pygame.draw.circle(self.screen, pygame.Color("red"), (self.pistol.bullet.coords),
+            pygame.draw.circle(self.screen, pygame.Color("red"), self.pistol.bullet.coords,
                                self.pistol.bullet.radius)
         pygame.display.flip()
 
@@ -130,9 +136,8 @@ class Pistol():
 class Bullet():
     def __init__(self, coords):
         self.coords = coords
-        self.radius = 6
-        self.weight = 0
-        self.velocity = 25
+        self.radius = 6  # Радиус шарика на экране
+        self.velocity = 25  # Скорость шарика на экране
 
     def collide(self, ticker):
         """
@@ -172,9 +177,17 @@ class Ticker():
             self.acceleration = 1
 
     def rect(self):
+        """
+        Возвращает объект прямоугольника текущекого маятника
+        :return: Rect
+        """
         return pygame.Rect(self.left, self.top, self.width, self.height)
 
     def get_coords(self):
+        """
+        Возвращает координаты левого верхнего угла, ширину и высоту
+        :return: tuple
+        """
         return self.left, self.top, self.width, self.height
 
     def update_velocity(self):
