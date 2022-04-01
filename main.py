@@ -6,8 +6,8 @@ pygame.display.set_caption("Physics lab")
 PISTOL = pygame.image.load('img/pistol.jpg')
 START = pygame.image.load('img/start.png')
 
-EMPTY_ALLIMINIUM_BULLET = pygame.image.load("img/empty_alluminium.png")
-ALLIMINIUM_BULLET = pygame.image.load("img/alluminium.png")
+EMPTY_ALLUMINIUM_BULLET = pygame.image.load("img/empty_alluminium.png")
+ALLUMINIUM_BULLET = pygame.image.load("img/alluminium.png")
 STEEL_BULLET = pygame.image.load("img/steel.png")
 EMPTY_BRASS_BULLET = pygame.image.load("img/empty_brass.png")
 BRASS_BULLET = pygame.image.load("img/brass.png")
@@ -23,12 +23,13 @@ class Lab:
     def __init__(self):
         self.doing = True
         self.started = False
+        self.set_warning_message = False
+        self.bullet_chosen = None
         self.screen = pygame.display.set_mode((1280, 600))
         self.screen.fill(pygame.Color("White"))
         self.clock = pygame.time.Clock()
-        self.ticker = Ticker(*ticker_coords)
+        self.ticker = Ticker(ticker_coords, self.bullet_chosen)
         self.pistol = Pistol(self.ticker.get_coords())
-        self.bullet_chosen = None
         self.angle = 0
 
     def run(self):
@@ -37,20 +38,27 @@ class Lab:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.doing = False
+                # Обработка нажатий мыши
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     pos = event.pos
+                    # Нажатие кнопки Start
                     if 1200 < pos[0] < 1280 and 530 < pos[1] < 600:
                         self.start()
+                    # Нажатие на одну из иконок пуль
                     for bullet in bullet_coords:
                         if bullet[0] <= pos[0] <= bullet[0] + 105 and bullet[1] <= pos[1] <= bullet[1] + 100:
                             self.bullet_chosen = bullet_coords.index(bullet)
+                            self.set_warning_message = False
             if self.started:
+                # Движение пули
                 if not self.pistol.bullet.collide(self.ticker) and self.ticker.velocity == 50:
                     self.pistol.bullet.move()
                 else:
+                    # Движение бруска
                     self.ticker.move()
                     self.pistol.bullet.coords = [self.ticker.left + self.ticker.width, self.pistol.bullet.coords[1]]
                 if self.ticker.velocity == 0:
+                    # Генерация угла отклонения бруска
                     self.angle = random.randrange(*angles[self.bullet_chosen]) / 10
                     self.started = False
             self.clock.tick(60)
@@ -68,8 +76,8 @@ class Lab:
         pygame.draw.rect(self.screen, pygame.Color('black'), self.ticker.rect(), width=0)
         # Кнопки
         self.screen.blit(START, (1200, 530))
-        self.screen.blit(EMPTY_ALLIMINIUM_BULLET, bullet_coords[0])
-        self.screen.blit(ALLIMINIUM_BULLET, bullet_coords[1])
+        self.screen.blit(EMPTY_ALLUMINIUM_BULLET, bullet_coords[0])
+        self.screen.blit(ALLUMINIUM_BULLET, bullet_coords[1])
         self.screen.blit(STEEL_BULLET, bullet_coords[2])
         self.screen.blit(EMPTY_BRASS_BULLET, bullet_coords[3])
         self.screen.blit(BRASS_BULLET, bullet_coords[4])
@@ -87,6 +95,12 @@ class Lab:
         font = pygame.font.SysFont("comicsansms", 20)
         text = font.render(f"α = {str(self.angle)}", True, pygame.Color("Black"))
         self.screen.blit(text, (500, 500))
+        # Предупреждение о невыбранной пуле
+        if self.set_warning_message:
+            font = pygame.font.SysFont("comicsansms", 20)
+            text = font.render(f"Выберите пулю!", True, pygame.Color("red"))
+            self.screen.blit(text, (1000, 545))
+        # Пуля
         if self.started:
             pygame.draw.circle(self.screen, pygame.Color("red"), (self.pistol.bullet.coords),
                                self.pistol.bullet.radius)
@@ -94,11 +108,14 @@ class Lab:
 
     def start(self):
         if self.bullet_chosen is not None:
-            self.ticker = Ticker(*ticker_coords)
+            # Создание экземпляров пули и бруска для текущего высрела и сам выстрел
+            self.ticker = Ticker(ticker_coords, self.bullet_chosen)
             self.pistol = Pistol(self.ticker.get_coords())
             self.started = True
             self.angle = 0
             self.pistol.shoot()
+        else:
+            self.set_warning_message = True
 
 
 class Pistol():
@@ -106,7 +123,7 @@ class Pistol():
         self.coords = (ticker_coords[0] + ticker_coords[2] + 200, ticker_coords[1] + (ticker_coords[3] / 4))
 
     def shoot(self):
-        current_bullet_coords = [self.coords[0] + 50, self.coords[1] + 20]
+        current_bullet_coords = [self.coords[0] + 20, self.coords[1] + 20]
         self.bullet = Bullet(current_bullet_coords)
 
 
@@ -118,6 +135,11 @@ class Bullet():
         self.velocity = 25
 
     def collide(self, ticker):
+        """
+        Проверка на пересечение пули и бруска
+        :param ticker:
+        :return: Bool
+        """
         if ticker.left <= self.coords[0] <= ticker.left + ticker.width and ticker.top <= self.coords[
             1] <= ticker.top + ticker.height:
             self.coords[0] = ticker.left + ticker.width
@@ -129,14 +151,25 @@ class Bullet():
 
 
 class Ticker():
-    def __init__(self, left, top, width, height):
-        self.left = left
-        self.top = top
-        self.width = width
-        self.height = height
+    def __init__(self, coords, bullet):
+        self.left = coords[0]
+        self.top = coords[1]
+        self.width = coords[2]
+        self.height = coords[3]
         self.weight = 0
         self.velocity = 50
-        self.acceleration = 1
+        if bullet == 0:
+            self.acceleration = 1
+        elif bullet == 1:
+            self.acceleration = 0.9
+        elif bullet == 2:
+            self.acceleration = 0.45
+        elif bullet == 3:
+            self.acceleration = 0.43
+        elif bullet == 4:
+            self.acceleration = 0.3
+        else:
+            self.acceleration = 1
 
     def rect(self):
         return pygame.Rect(self.left, self.top, self.width, self.height)
