@@ -4,19 +4,21 @@ import random
 pygame.init()
 pygame.display.set_caption("Измерение скорости пули с помощью баллистического маятника")
 PISTOL = pygame.image.load('img/pistol.jpg')
+PISTOL_STARTED = pygame.image.load("img/pistol_started.jpg")
 START = pygame.image.load('img/start.png')
-
+SMOKE = pygame.image.load("img/smoke.jpg")
 EMPTY_ALLUMINIUM_BULLET = pygame.image.load("img/empty_alluminium.png")
 ALLUMINIUM_BULLET = pygame.image.load("img/alluminium.png")
 STEEL_BULLET = pygame.image.load("img/steel.png")
 EMPTY_BRASS_BULLET = pygame.image.load("img/empty_brass.png")
 BRASS_BULLET = pygame.image.load("img/brass.png")
-
+ALTMARK = pygame.image.load("img/altmark.jpg")
 INFO = pygame.image.load("img/info.png")
 ICON = pygame.image.load("img/icon.png")
 
 bullet_coords = [(700, 2), (810, 2), (920, 2), (1030, 9), (1140, 2)]
 bullet_weights = [5.2, 6.8, 13.6, 13.8, 19, 9]
+bullet_colors = ["grey", "blue", "black", "orange", "red"]
 angles = [(195, 220, 1), (235, 250, 1), (325, 350, 1), (325, 350, 1), (375, 400, 1)]
 ticker_coords = (350, 300, 250, 100)
 
@@ -48,7 +50,7 @@ class Lab:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     pos = event.pos
                     # Нажатие кнопки Start
-                    if 1200 < pos[0] < 1280 and 530 < pos[1] < 600:
+                    if 1200 < pos[0] < 1280 and 530 < pos[1] < 600 and not self.started:
                         self.start()
                     # Нажатие на одну из иконок пуль
                     for bullet in bullet_coords:
@@ -57,7 +59,7 @@ class Lab:
                             self.set_warning_message = False
             if self.started:
                 # Движение пули
-                if not self.pistol.bullet.collide(self.ticker) and self.ticker.velocity == 50:
+                if not self.pistol.bullet.collide(self.ticker) and self.ticker.velocity > 0:
                     self.pistol.bullet.move()
                 else:
                     # Движение бруска
@@ -89,11 +91,15 @@ class Lab:
         self.screen.blit(BRASS_BULLET, bullet_coords[4])
         if self.bullet_chosen is not None:
             pygame.draw.rect(self.screen, pygame.Color('red'),
-                             pygame.Rect(bullet_coords[self.bullet_chosen], (100, 100)), width=3)
+                             pygame.Rect((bullet_coords[self.bullet_chosen][0], 0), (100, 100)), width=3)
         # Информация об установке
         self.screen.blit(INFO, (0, 0))
         # Пистолет
-        self.screen.blit(PISTOL, self.pistol.coords)
+        if self.started:
+            self.screen.blit(PISTOL_STARTED, self.pistol.coords)
+            self.screen.blit(SMOKE, (self.pistol.coords[0] - 15, self.pistol.coords[1] - 100))
+        else:
+            self.screen.blit(PISTOL, self.pistol.coords)
         pygame.draw.line(self.screen, pygame.Color("black"), (self.pistol.coords[0], self.pistol.coords[1] + 65),
                          (self.pistol.coords[0] + 100, self.pistol.coords[1] + 65),
                          width=2)
@@ -108,7 +114,7 @@ class Lab:
             self.screen.blit(text, (1000, 545))
         # Пуля
         if self.started:
-            pygame.draw.circle(self.screen, pygame.Color("red"), self.pistol.bullet.coords,
+            pygame.draw.circle(self.screen, pygame.Color(bullet_colors[self.bullet_chosen]), self.pistol.bullet.coords,
                                self.pistol.bullet.radius)
         pygame.display.flip()
 
@@ -137,7 +143,7 @@ class Bullet():
     def __init__(self, coords):
         self.coords = coords
         self.radius = 6  # Радиус шарика на экране
-        self.velocity = 25  # Скорость шарика на экране
+        self.velocity = 500  # Скорость шарика на экране
 
     def collide(self, ticker):
         """
@@ -152,7 +158,7 @@ class Bullet():
         return False
 
     def move(self):
-        self.coords[0] -= self.velocity
+        self.coords[0] -= self.velocity / FPS
 
 
 class Ticker():
@@ -163,18 +169,25 @@ class Ticker():
         self.height = coords[3]
         self.weight = 0
         self.velocity = 50
+        self.y_velocity = 1
+        self.acceleration = 10
         if bullet == 0:
-            self.acceleration = 1
+            self.velocity = 130
+            self.y_velocity = 1
         elif bullet == 1:
-            self.acceleration = 0.9
+            self.velocity = 160
+            self.y_velocity = 1.5
         elif bullet == 2:
-            self.acceleration = 0.45
+            self.velocity = 320
+            self.y_velocity = 3
         elif bullet == 3:
-            self.acceleration = 0.43
+            self.velocity = 330
+            self.y_velocity = 3
         elif bullet == 4:
-            self.acceleration = 0.3
+            self.velocity = 350
+            self.y_velocity = 4
         else:
-            self.acceleration = 1
+            self.velocity = 500
 
     def rect(self):
         """
@@ -191,14 +204,14 @@ class Ticker():
         return self.left, self.top, self.width, self.height
 
     def update_velocity(self):
-        self.old_velocity = self.velocity
-        self.velocity = self.old_velocity - self.acceleration
+        self.velocity -= self.acceleration
         if self.velocity < 0:
             self.velocity = 0
 
     def move(self):
         self.update_velocity()
         self.left -= self.velocity / FPS
+        self.top -= self.y_velocity / FPS
 
 
 lab = Lab()
