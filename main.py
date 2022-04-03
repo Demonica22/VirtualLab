@@ -15,7 +15,7 @@ BRASS_BULLET = pygame.image.load("img/brass.png")
 ALTMARK = pygame.image.load("img/altmark.jpg")
 INFO = pygame.image.load("img/info.png")
 ICON = pygame.image.load("img/icon.png")
-
+# TICKER = pygame.image.load("img/ticker.png")
 bullet_coords = [(700, 2), (810, 2), (920, 2), (1030, 9), (1140, 2)]
 bullet_weights = [5.2, 6.8, 13.6, 13.8, 19, 9]
 bullet_colors = ["grey", "blue", "black", "orange", "red"]
@@ -83,6 +83,7 @@ class Lab:
                          width=2)
         pygame.draw.rect(self.screen, pygame.Color('black'), self.ticker.rect(), width=0)
         # Кнопки
+        # self.screen.blit(TICKER,(self.ticker.get_coords()[:2]))
         self.screen.blit(START, (1200, 530))
         self.screen.blit(EMPTY_ALLUMINIUM_BULLET, bullet_coords[0])
         self.screen.blit(ALLUMINIUM_BULLET, bullet_coords[1])
