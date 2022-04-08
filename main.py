@@ -50,6 +50,7 @@ class Lab:
                 # Обработка нажатий мыши
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     pos = event.pos
+                    print(pos)
                     # Нажатие кнопки Start
                     if 1180 < pos[0] < 1280 and 550 < pos[1] < 600 and not self.started:
                         self.start()
@@ -93,20 +94,29 @@ class Lab:
     def render(self):
         self.screen.fill(pygame.Color("White"))
         # Установка
-        pygame.draw.line(self.screen, pygame.Color('black'), (250, 120), (700, 120), width=5)
         self.screen.blit(PROTRACTOR, (300, 125))
+        # Подвес и нити
+        pygame.draw.line(self.screen, pygame.Color('black'), (250, 120), (695, 120), width=7)
         pygame.draw.line(self.screen, pygame.Color('black'), (550, 120),
                          (self.ticker.left + self.ticker.width - 50, self.ticker.top), width=2)
         pygame.draw.line(self.screen, pygame.Color('black'), (400, 120), (self.ticker.left + 50, self.ticker.top),
                          width=2)
+        # Маятник
         self.screen.blit(TICKER, self.ticker.get_coords()[:2])
+        # Подставка пистолета
+        pygame.draw.line(self.screen, pygame.Color("black"), (800, 394), (899, 394), width=10)
+        pygame.draw.rect(self.screen, pygame.Color("black"), pygame.Rect((850, 394), (5, 206)))
+        pygame.draw.line(self.screen, pygame.Color("black"), (800, 598), (899, 598), width=10)
+
         # Кнопки
         self.screen.blit(START, (1180, 550))
+        # Пули
         self.screen.blit(EMPTY_ALLUMINIUM_BULLET, bullet_coords[0])
         self.screen.blit(ALLUMINIUM_BULLET, bullet_coords[1])
         self.screen.blit(STEEL_BULLET, bullet_coords[2])
         self.screen.blit(EMPTY_BRASS_BULLET, bullet_coords[3])
         self.screen.blit(BRASS_BULLET, bullet_coords[4])
+
         if self.bullet_chosen is not None:
             pygame.draw.rect(self.screen, pygame.Color('red'),
                              pygame.Rect((bullet_coords[self.bullet_chosen][0], 0), (100, 100)), width=3)
@@ -150,8 +160,7 @@ class Pistol():
         self.coords = (ticker_coords[0] + ticker_coords[2] + 200, ticker_coords[1] + (ticker_coords[3] / 4))
 
     def shoot(self):
-        current_bullet_coords = [self.coords[0] + 5, self.coords[1] + 10]
-        self.bullet = Bullet(current_bullet_coords)
+        self.bullet = Bullet([self.coords[0] + 5, self.coords[1] + 10])
 
 
 class Bullet():
