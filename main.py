@@ -32,7 +32,8 @@ class Lab:
     def __init__(self):
         self.doing = True
         self.started = False
-        self.set_warning_message = False
+        self.set_warning_message_bullet = False
+        self.set_warning_message_ticker = False
         self.bullet_chosen = None
         self.screen = pygame.display.set_mode((1280, 600))
         self.screen.fill(pygame.Color("White"))
@@ -50,15 +51,18 @@ class Lab:
                 # Обработка нажатий мыши
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     pos = event.pos
-                    print(pos)
                     # Нажатие кнопки Start
                     if 1180 < pos[0] < 1280 and 550 < pos[1] < 600 and not self.started:
-                        self.start()
+                        if self.ticker.get_coords() != ticker_coords:
+                            self.set_warning_message_ticker = True
+                        else:
+                            self.set_warning_message_ticker = False
+                            self.start()
                     # Нажатие на одну из иконок пуль
                     for bullet in bullet_coords:
                         if bullet[0] <= pos[0] <= bullet[0] + 105 and bullet[1] <= pos[1] <= bullet[1] + 100:
                             self.bullet_chosen = bullet_coords.index(bullet)
-                            self.set_warning_message = False
+                            self.set_warning_message_bullet = False
             if self.started:
                 # Движение пули
                 if not self.pistol.bullet.collide(self.ticker) and self.ticker.velocity > 0:
@@ -72,7 +76,7 @@ class Lab:
                     self.angle = random.randrange(*angles[self.bullet_chosen]) / 10
                     self.started = False
             if self.ticker.time is not None:
-                if abs(int(self.ticker.time) - int(time.strftime("%S", time.gmtime()))) > 5:
+                if abs(int(self.ticker.time) - int(time.strftime("%S", time.gmtime()))) > 3:
 
                     left, top, width, height = self.ticker.get_coords()
                     if left < ticker_coords[0]:
@@ -86,6 +90,8 @@ class Lab:
                             top += abs(ticker_coords[1] - top) / FPS
                         else:
                             top = ticker_coords[1]
+                    if left == ticker_coords[0] and top == ticker_coords[1]:
+                        self.set_warning_message_ticker = False
                     self.ticker.set_coords((left, top))
             self.clock.tick(60)
             self.render()
@@ -94,7 +100,7 @@ class Lab:
     def render(self):
         self.screen.fill(pygame.Color("White"))
         # Установка
-        self.screen.blit(PROTRACTOR, (300, 125))
+        self.screen.blit(PROTRACTOR, (300, 124))
         # Подвес и нити
         pygame.draw.line(self.screen, pygame.Color('black'), (250, 120), (695, 120), width=7)
         pygame.draw.line(self.screen, pygame.Color('black'), (550, 120),
@@ -133,10 +139,14 @@ class Lab:
             text = font.render(f"α = {str(self.angle)}°", True, pygame.Color("Black"))
             self.screen.blit(text, (300, 500))
         # Предупреждение о невыбранной пуле
-        if self.set_warning_message:
+        if self.set_warning_message_bullet:
             font = pygame.font.SysFont("comicsansms", 20)
             text = font.render(f"Выберите пулю!", True, pygame.Color("red"))
             self.screen.blit(text, (1000, 545))
+        elif self.set_warning_message_ticker:
+            font = pygame.font.SysFont("comicsansms", 15)
+            text = font.render("Маятник не на исходной. Подождите!", True, pygame.Color("red"))
+            self.screen.blit(text, (1000, 525))
         # Пуля
         if self.started:
             pygame.draw.circle(self.screen, pygame.Color(bullet_colors[self.bullet_chosen]), self.pistol.bullet.coords,
@@ -152,7 +162,7 @@ class Lab:
             self.angle = 0
             self.pistol.shoot()
         else:
-            self.set_warning_message = True
+            self.set_warning_message_bullet = True
 
 
 class Pistol():
