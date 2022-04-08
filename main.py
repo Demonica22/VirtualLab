@@ -13,7 +13,7 @@ ALLUMINIUM_BULLET = pygame.image.load("img/alluminium.png")
 STEEL_BULLET = pygame.image.load("img/steel.png")
 EMPTY_BRASS_BULLET = pygame.image.load("img/empty_brass.png")
 BRASS_BULLET = pygame.image.load("img/brass.png")
-ALTMARK = pygame.image.load("img/altmark.jpg")
+#ALTMARK = pygame.image.load("img/altmark.jpg")
 INFO = pygame.image.load("img/info.png")
 ICON = pygame.image.load("img/icon.png")
 TICKER = pygame.image.load("img/ticker.png")
@@ -59,10 +59,11 @@ class Lab:
                             self.set_warning_message_ticker = False
                             self.start()
                     # Нажатие на одну из иконок пуль
-                    for bullet in bullet_coords:
-                        if bullet[0] <= pos[0] <= bullet[0] + 105 and bullet[1] <= pos[1] <= bullet[1] + 100:
-                            self.bullet_chosen = bullet_coords.index(bullet)
-                            self.set_warning_message_bullet = False
+                    if not self.started:
+                        for bullet in bullet_coords:
+                            if bullet[0] <= pos[0] <= bullet[0] + 105 and bullet[1] <= pos[1] <= bullet[1] + 100:
+                                self.bullet_chosen = bullet_coords.index(bullet)
+                                self.set_warning_message_bullet = False
             if self.started:
                 # Движение пули
                 if not self.pistol.bullet.collide(self.ticker) and self.ticker.velocity > 0:
