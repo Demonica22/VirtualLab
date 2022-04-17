@@ -1,5 +1,7 @@
 import pygame
 import random
+import math
+import time
 
 pygame.init()
 pygame.display.set_caption("Измерение скорости пули с помощью баллистического маятника")
@@ -52,8 +54,8 @@ class Lab:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     pos = event.pos
                     # Нажатие кнопки Старт
-                    if 1180 < pos[0] < 1280 and 550 < pos[1] < 600 and not self.started:
-                        if self.ticker.get_coords() != ticker_coords:
+                    if 1180 < pos[0] < 1280 and 550 < pos[1] < 600:
+                        if self.started:
                             self.set_warning_message_ticker = True
                         else:
                             self.set_warning_message_ticker = False
@@ -77,10 +79,9 @@ class Lab:
                     self.ticker.move()
                     self.pistol.bullet.coords = [self.ticker.left + self.ticker.width, self.pistol.bullet.coords[1]]
                 if self.ticker.reached_most_left_point and self.delta_x == 0:
-                    #Генерация максимального отклонения бруска
+                    # Генерация максимального отклонения бруска
                     self.delta_x = random.randrange(*deltas[self.bullet_chosen]) / 100
-                if self.ticker.velocity == 0 and self.ticker.start_velocity == 0:
-                    self.started = False
+                self.started = not self.ticker.finished
             self.clock.tick(60)
             self.render()
             pygame.display.flip()
@@ -134,7 +135,6 @@ class Lab:
             self.screen.blit(text, (1000, 510))
         elif self.set_warning_message_ticker:
             font = pygame.font.SysFont("comicsansms", 15)
-            print(self.ticker.get_coords())
             text = font.render("Маятник не на исходной", True, pygame.Color("red"))
             self.screen.blit(text, (1000, 510))
         # Пуля
@@ -192,20 +192,30 @@ class Ticker():
         self.top = coords[1]
         self.width = coords[2]
         self.height = coords[3]
-        self.acceleration = 10
-        self.velocity = 0
+        self.acceleration = 10  # Ускорение (замедление)
+        self.velocity = 0  # Скорость полученная от удара с пулей
+        self.bullet = bullet
+        self.theta = False
+        self.reached_most_left_point = False
+        self.finished = False  # Остановился ли маятник
+        self.start_time = 0  # Время начала движения
         if bullet == 0:
             self.velocity = 240
+            self.time = 12  # Время на качание
         elif bullet == 1:
             self.velocity = 250
+            self.time = 14
         elif bullet == 2:
             self.velocity = 300
+            self.time = 21
         elif bullet == 3:
             self.velocity = 305
+            self.time = 22
         elif bullet == 4:
             self.velocity = 330
+            self.time = 24
         self.start_velocity = self.velocity
-        self.reached_most_left_point = False
+
     def set_coords(self, coords):
         self.left = coords[0]
         self.top = coords[1]
@@ -231,25 +241,45 @@ class Ticker():
         return self.left, self.top, self.width, self.height
 
     def update_velocity(self):
-        #print(self.velocity, self.start_velocity, self.acceleration)
         self.velocity -= self.acceleration
-        if (self.velocity < 0 and self.acceleration > 0) or (self.velocity > 0 and self.acceleration < 0):
+        if self.velocity < 0:
             self.velocity = 0
-        if self.velocity == 0:
-            if self.acceleration == 10:
-                self.reached_most_left_point = True
-                self.acceleration = 5
-            self.start_velocity *= -0.85
-            self.velocity = self.start_velocity
-            self.acceleration *= -1
-            if abs(self.start_velocity) < 15:
-                self.return_to_start_position()
-                self.start_velocity = 0
-                self.acceleration = 0
+            self.reached_most_left_point = True
 
     def move(self):
-        self.update_velocity()
-        self.left -= self.velocity / FPS
+        if self.reached_most_left_point:
+            if not self.theta:
+                self.theta_v()
+            if abs(self.start_time - time.time()) > self.time:
+                self.finished = True
+                self.set_coords(ticker_coords[:2])
+            else:
+                acc = -.005 * math.sin(self.theta)
+                self.velocity += acc
+                self.velocity *= .995
+                self.theta += self.velocity
+                self.get_path(self.theta, self.v)
+        else:
+            self.update_velocity()
+            self.left -= self.velocity / FPS
+
+    def theta_v(self):
+        self.start_time = time.time()
+        self.v = math.sqrt(math.pow(self.left - (590 / 2), 2))
+        self.theta = math.asin(((self.left - (590 / 2)) / self.v))
+        self.reached_most_left_point = True
+
+    def get_path(self, theta, v):
+        self.delta = self.left - (ticker_coords[0] + (v * math.sin(theta)))
+        if abs(self.delta) > 2:
+            if self.delta < 0:
+                self.delta += max(self.bullet, 2)
+            else:
+                self.delta -= max(self.bullet, 2)
+        else:
+            self.delta = 0
+
+        self.left = ticker_coords[0] + (v * math.sin(theta)) + self.delta
 
 
 lab = Lab()
